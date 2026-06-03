@@ -19,7 +19,7 @@ from core.audit import AuditLog, reset
 from core.llm import LLMClient
 from core.metrics import evaluate
 from core.orchestrator import Orchestrator
-from data.loader import load_all
+from data.loader import load_all, parse_upload
 
 # Ground-truth labels for the synthetic set (id -> benign|malicious).
 GROUND_TRUTH = {
@@ -40,34 +40,49 @@ GREEN, RED, YEL, DIM, RESET = "\033[92m", "\033[91m", "\033[93m", "\033[2m", "\0
 
 def main() -> None:
     backend = os.getenv("SOC_LLM_BACKEND", "mock")
+    user_file = None
+    for i, arg in enumerate(sys.argv):
+        if arg in ("--file", "-f") and i + 1 < len(sys.argv):
+            user_file = sys.argv[i + 1]
+
     print(f"\nSpecula demo  -  LLM backend: {backend}\n" + "=" * 56)
 
     reset("specula_audit.db")
     orch = Orchestrator(llm=LLMClient(backend=backend), audit=AuditLog("specula_audit.db"))
 
-    alerts = load_all()
+    if user_file:
+        content = Path(user_file).read_text()
+        alerts = parse_upload(content, user_file)
+        print(f"Loaded {len(alerts)} alert(s) from {user_file}\n")
+        labeled = None
+    else:
+        alerts = load_all()
+        labeled = [(a, GROUND_TRUTH.get(a["id"], "malicious")) for a in alerts]
+
     for alert in alerts:
         r = orch.process(alert)
         colour = GREEN if r.outcome == "autonomous" else YEL
         tag = "AUTONOMOUS" if r.outcome == "autonomous" else "-> HUMAN"
         flag = f" {RED}[INJECTION CONTAINED]{RESET}" if r.injection_flagged else ""
-        print(f"\n{alert['id']}  ({alert['source']}){flag}")
+        print(f"\n{alert['id']}  ({alert.get('source','?')}){flag}")
         print(f"  {colour}{tag}{RESET}  sev={r.severity} conf={r.confidence:.2f}  {DIM}{r.gate_reason}{RESET}")
         for step in r.trace:
             print(f"    {DIM}{step}{RESET}")
 
-    # Quality report
-    labeled = [(a, GROUND_TRUTH.get(a["id"], "malicious")) for a in alerts]
-    report = evaluate(labeled, orch)
-    print("\n" + "=" * 56)
-    print("Detection quality report")
-    print("-" * 56)
-    print(f"  alerts evaluated      : {report.total}")
-    print(f"  precision             : {report.precision}")
-    print(f"  false-positive rate   : {report.false_positive_rate}")
-    print(f"  auto-action rate      : {report.auto_action_rate}")
-    print(f"  verdict stability     : {report.verdict_stability}")
-    print("=" * 56 + "\n")
+    # Quality report only makes sense for the labeled built-in set.
+    if labeled is not None:
+        report = evaluate(labeled, orch)
+        print("\n" + "=" * 56)
+        print("Detection quality report")
+        print("-" * 56)
+        print(f"  alerts evaluated      : {report.total}")
+        print(f"  precision             : {report.precision}")
+        print(f"  false-positive rate   : {report.false_positive_rate}")
+        print(f"  auto-action rate      : {report.auto_action_rate}")
+        print(f"  verdict stability     : {report.verdict_stability}")
+        print("=" * 56 + "\n")
+    else:
+        print("\n(quality report skipped: user-supplied logs have no ground-truth labels)\n")
 
     orch.audit.close()
 

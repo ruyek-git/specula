@@ -1,0 +1,27 @@
+<svg width="256" height="256" viewBox="0 0 256 256" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>Specula</title>
+  <desc>A watchtower with a watchful beacon-eye, the Specula project icon.</desc>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="#0F6E56"/>
+  <rect x="8" y="8" width="240" height="240" rx="48" fill="none" stroke="#04342C" stroke-width="3" opacity="0.35"/>
+
+  <rect x="100" y="138" width="56" height="84" rx="4" fill="#E1F5EE"/>
+  <path d="M88 138 L128 108 L168 138 Z" fill="#E1F5EE"/>
+  <rect x="84" y="134" width="88" height="10" rx="3" fill="#E1F5EE"/>
+
+  <rect x="112" y="50" width="32" height="40" rx="4" fill="#E1F5EE"/>
+  <path d="M106 50 L128 32 L150 50 Z" fill="#EF9F27"/>
+
+  <circle cx="128" cy="72" r="11" fill="#0F6E56"/>
+  <circle cx="128" cy="72" r="11" fill="none" stroke="#04342C" stroke-width="1.5" opacity="0.4"/>
+  <circle cx="128" cy="72" r="4.5" fill="#EF9F27"/>
+
+  <path d="M116 188 L140 188 L136 222 L120 222 Z" fill="#0F6E56"/>
+  <line x1="100" y1="164" x2="156" y2="164" stroke="#0F6E56" stroke-width="3"/>
+  <line x1="100" y1="108" x2="100" y2="222" stroke="#0F6E56" stroke-width="2" opacity="0.5"/>
+  <line x1="156" y1="108" x2="156" y2="222" stroke="#0F6E56" stroke-width="2" opacity="0.5"/>
+
+  <line x1="88" y1="100" x2="76" y2="88" stroke="#EF9F27" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <line x1="168" y1="100" x2="180" y2="88" stroke="#EF9F27" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <line x1="84" y1="116" x2="68" y2="112" stroke="#EF9F27" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  <line x1="172" y1="116" x2="188" y2="112" stroke="#EF9F27" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+</svg>

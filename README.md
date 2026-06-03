@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/specula-icon.svg" width="120" height="120" alt="Specula icon">
+</p>
+
 # Specula
 
 *Latin for "watchtower" — the elevated vantage point a lookout uses to see
@@ -7,6 +11,11 @@ the view, plus the inference drawn from it.*
 An AI-native security operations pipeline where LLM agents triage, enrich, and
 correlate alerts — and take **bounded, reversible, fully-audited** autonomous
 action on low-criticality events while routing everything else to a human.
+
+<p align="center">
+  <img src="docs/demo.gif" alt="Specula dashboard demo" width="100%">
+  <br><em>The pipeline routing synthetic CloudTrail and Okta alerts — autonomous on benign, human on high-severity, injection contained.</em>
+</p>
 
 This is a reference implementation built to explore a specific question:
 *where is it actually safe to let an AI agent act inside a SOC, and what has to
@@ -175,11 +184,17 @@ python demo/run_demo.py
 
 ## Quickstart
 
+Specula runs with **zero third-party dependencies** on the mock backend
+(standard library only), so the keyless demo works straight after cloning.
+
 ```bash
 git clone https://github.com/ruyek-git/specula
 cd specula
-pip install -r requirements.txt
+```
 
+**macOS / Linux**
+
+```bash
 # Keyless deterministic run:
 SOC_LLM_BACKEND=mock python demo/run_demo.py
 
@@ -189,6 +204,58 @@ export ANTHROPIC_API_KEY=sk-...
 python demo/run_demo.py
 ```
 
+**Windows (PowerShell)**
+
+```powershell
+# Keyless deterministic run:
+$env:SOC_LLM_BACKEND="mock"
+python demo\run_demo.py
+
+# Or with a real model:
+$env:SOC_LLM_BACKEND="anthropic"
+$env:ANTHROPIC_API_KEY="sk-..."
+python demo\run_demo.py
+```
+
+**Optional: the dashboard and tests**
+
+```bash
+pip install streamlit          # only needed for the dashboard
+streamlit run demo/dashboard.py   # use a backslash path on Windows: demo\dashboard.py
+
+python tests/test_pipeline.py  # 7 tests, runs on the mock backend, no key needed
+```
+
+## Bring your own logs
+
+Specula isn't limited to the bundled synthetic set.
+
+Run your own logs through the pipeline from the terminal:
+
+```bash
+python demo/run_demo.py --file path/to/your_logs.json     # JSON
+python demo/run_demo.py --file path/to/your_logs.txt      # one log line per row
+```
+
+The loader accepts CloudTrail (`{"Records": [...]}`), Okta (`{"events": [...]}`),
+a bare JSON array, a single record, or plain text. Attacker-controllable fields
+are preserved so the input-fencing guardrail still applies to your data.
+
+In the dashboard, the **Pipeline** tab has an upload/paste option for the same,
+and each processed alert exposes its raw log (with a copy button) so you can lift
+it into the assistant.
+
+## Analyst assistant (read-only)
+
+The dashboard's second tab is a freeform "explain this log and why it's
+anomalous" assistant. It is deliberately **walled off from the pipeline**: it
+holds no tools and has no path to an autonomous action — explanation and
+authority-to-act are different trust levels, and an open prompt over
+attacker-controlled log text is the prime injection surface. The log is fenced
+as untrusted data, and if it contains instruction-like text the answer is
+prefixed with a visible warning. On the mock backend it returns a transparent
+heuristic stub; on a real backend it returns a full explanation.
+
 ## Project layout
 
 ```
@@ -197,7 +264,7 @@ specula/
 │   ├── orchestrator.py   runs the pipeline, owns the decision gate
 │   ├── guardrails.py     validation layer: input fencing, allowlist, rate limit
 │   ├── audit.py          structured audit log → SQLite
-│   ├── tools.py          mocked actions (disable_detection, enrich_case, …)
+│   ├── tools.py          mocked actions (disable_detection, tag_benign, …)
 │   ├── llm.py            pluggable LLMClient (anthropic/openai/ollama/mock)
 │   └── metrics.py        precision / FP rate / verdict stability
 ├── agents/
@@ -205,11 +272,15 @@ specula/
 │   ├── enrichment.py
 │   └── correlation.py
 ├── data/
-│   ├── cloudtrail_samples.json
-│   ├── okta_samples.json
-│   └── injection_demo.json
-├── demo/run_demo.py
-└── tests/
+│   ├── cloudtrail_samples.json   realistic CloudTrail schema
+│   ├── okta_samples.json         realistic Okta System Log schema
+│   ├── injection_demo.json       planted prompt-injection payloads
+│   └── loader.py                 normalises both schemas into flat alerts
+├── demo/
+│   ├── run_demo.py       terminal runner
+│   └── dashboard.py      optional Streamlit UI
+├── docs/                 icon + demo gif
+└── tests/test_pipeline.py
 ```
 
 ## Scope and honesty
