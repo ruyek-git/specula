@@ -1,0 +1,11 @@
+# Specula runs with ZERO third-party deps on the mock backend (stdlib only).
+# Install only what you need for the backend you choose.
+
+# Optional - real LLM backends:
+# anthropic>=0.40        # SOC_LLM_BACKEND=anthropic
+# openai>=1.40           # SOC_LLM_BACKEND=openai (also OpenAI-compatible/local)
+# ollama backend uses stdlib urllib - no package needed
+
+# Optional - dashboard + tests:
+# streamlit>=1.40        # demo/dashboard.py
+# pytest>=8.0            # tests/
